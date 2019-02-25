@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <link rel="shortcut icon" href="https://csdnimg.cn/public/favicon.ico">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>SPIDER SITE</title>
+    </head>
+
+    <body>
+        <div id="content1">
+            <h3>Welcome user, you can use this page to get the real video link or watch video in this page.</h3>
+            <br>
+            <div id="urlType">
+                <span style="color:#fff">Please type in the specified url to get the real video link.</span>
+                <div>
+                    <textarea id="text1" style="width:99%; height:100px; margin-top:25px"></textarea>
+                </div>
+            </div>
+
+            <div id="actionType">
+                <input type="button" value="GetByUrl" onclick="getByUrl()">
+                <input type="button" value="GetByKeyword" onclick="getByKeyword()">
+            </div>
+
+            <div id="keywordType">
+                <span style="color:#fff">Please type in the key words to get the real video link.</span>
+                <div>
+                    <input id="text2" type="text" style="width:99%; height:100px; margin-top:25px">
+                </div>
+            </div>
+
+            <div id="urlList">
+                <table>
+                    <thead>
+                        <th id="title1">Video Url</th>
+                        <th id="title2">Discrption</th>
+                        <th id="title3">Play</th>
+                    </thead>
+                </table>
+            </div>
+        </div>
+
+        <div id="content2">
+            <video width="50.3%" height="400" controls="controls" id="videoId" src="">
+                    </video>
+        </div>
+    </body>
+
+</html>
+
+<script>
+    var serverUrlStr = "http://localhost:1337";
+    var getByUrlStr = serverUrlStr + "/api/videourl?path=";
+    var getByKeywordStr = serverUrlStr + "/api/keyword?keyword=";
+
+    function getByUrl() {
+        var param = document.getElementById('text1').value;
+        if (param == null || typeof param == 'undefined' || param.indexOf('.html') < 0 || param.indexOf('v.qq.com') < 0) {
+            alert("Please input video url and click the button again.")
+            return
+        }
+
+        var targetUrl = getByUrlStr + param;
+
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var responseText = xhr.responseText;
+                var urlInfo = JSON.parse(xhr.responseText);
+                if (urlInfo != null || urlInfo.urlList.length)
+                    updateTable(urlInfo.urlList[urlInfo.urlList.length - 1]);
+            }
+        };
+        xhr.open("GET", targetUrl, true);
+        xhr.send(null);
+    }
+
+    function getByKeyword() {
+        var param = document.getElementById('text2').value;
+        if (param == null || typeof param == 'undefined') {
+            alert("Please input param and click the button again.")
+            return
+        }
+        var keyword = param.split('_')[0];
+        var num = param.split('_')[1];
+        var targetUrl = getByKeywordStr + keyword + '&num=' + 'num';
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                var responseText = xhr.responseText;
+                var urlInfo = JSON.parse(xhr.responseText);
+                if (urlInfo != null && urlInfo.result.length)
+                    updateTable(urlInfo.result);
+            }
+        };
+        xhr.open("GET", targetUrl, true);
+        xhr.send(null);
+    }
+
+    function playVideo(url) {
+        var source = document.getElementById('videoId');
+        source.setAttribute('src', url);
+    }
+
+    function updateTable(urlList) {
+        var table = document.getElementsByTagName("table")[0];
+        var tempHtml = table.innerHTML;
+        if (tempHtml == null || typeof tempHtml == 'undefined') {
+            return
+        }
+
+        var index = tempHtml.indexOf('</thead>') + 8;
+        tempHtml = tempHtml.slice(0, index);
+        if (typeof urlList === "string") {
+            var temptr = "<tr><td>" + urlList + "</td><td></td><td><input type='button' value='Play' onclick='playVideo(\"" + urlList + "\")'></td></tr>";
+            if (temptr != null && temptr != "") {
+                tempHtml += temptr;
+            }
+        } else {
+            for (var i in urlList) {
+                var temptr = "<tr><td>" + urlList[i].url + "</td><td>" + urlList[i].title + "</td><td><input type='button' value='Play' onclick='playVideo(\"" + urlList[i].url + "\")'></td></tr>";
+                if (temptr != null && temptr != "") {
+                    tempHtml += temptr;
+                }
+            }
+        }
+        tempHtml += "</tbody>";
+        table.innerHTML = "";
+        table.innerHTML = tempHtml;
+    }
+</script>
+
+<style>
+    body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        background: #f8f8f9;
+    }
+    
+    #urlType {
+        height: 200px;
+        width: 20%;
+        border: #dddee1 1px solid;
+        float: left;
+        background: #ff9900;
+    }
+    
+    #actionType {
+        height: 200px;
+        width: 10%;
+        border: #dddee1 1px solid;
+        float: left;
+        background: #2b85e4;
+    }
+    
+    #keywordType {
+        height: 200px;
+        width: 20%;
+        border: #dddee1 1px solid;
+        float: left;
+        background: #19be6b;
+    }
+    
+    #urlList {
+        float: left;
+        margin-left: 5px;
+        border: #dddee1 2px solid;
+        width: 48%;
+        font-size: 12px;
+        font-weight: 300;
+        border-radius: 1%;
+        background-color: #2b85e4;
+        color: #fff;
+        min-height: 620px;
+    }
+    
+    #urlList table {
+        width: 100% !important;
+        word-break: break-all;
+        word-wrap: break-word;
+        display: block;
+    }
+    
+    #urlList table tbody {
+        display: block;
+        height: 620px;
+        overflow-y: auto;
+    }
+    
+    table thead {
+        display: table;
+    }
+    
+    table thead,
+    tbody tr {
+        width: 100%;
+        /* table-layout: fixed; */
+    }
+    
+    #urlList table td {
+        border-top: #e9eaec 1px solid;
+        border-right: #e9eaec 1px solid;
+    }
+    
+    #title1 {
+        width: 50%;
+        border-right: #e9eaec 1px solid;
+    }
+    
+    #title2 {
+        width: 40%;
+        border-right: #e9eaec 1px solid;
+    }
+    
+    input[type="button"] {
+        width: 100%;
+        height: 30%;
+        margin-top: 13%;
+        background: #F5FDA0;
+        border-radius: 25%;
+        color: #2b85e4;
+    }
+    
+    #content1 {
+        position: absolute;
+        width: 100%;
+    }
+    
+    #content2 {
+        display: block;
+        float: left;
+        margin-top: 300px;
+        width: 100%;
+    }
+</style>

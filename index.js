@@ -272,7 +272,6 @@ function getVideoUrl(path, callback) {
 }
 
 var port = process.env.PORT || 1337;
-var port = 1337;
 server.listen(port, function() {
     console.log('https server is running at http://localhost:%d', port);
 })
